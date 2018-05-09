@@ -459,24 +459,10 @@ static int do_read_inode(struct inode *inode)
 		}
 	}
 
-	init_idisk_time(inode);
-
-	/* Need all the flag bits */
-	f2fs_init_read_extent_tree(inode, node_page);
-	f2fs_init_age_extent_tree(inode);
-
-	if (!sanity_check_inode(inode, node_page)) {
-		f2fs_put_page(node_page, 1);
-		f2fs_handle_error(sbi, ERROR_CORRUPTED_INODE);
-		return -EFSCORRUPTED;
-	}
-
-	if (!sanity_check_extent_cache(inode)) {
-		f2fs_put_page(node_page, 1);
-		f2fs_handle_error(sbi, ERROR_CORRUPTED_INODE);
-		return -EFSCORRUPTED;
-	}
-
+	F2FS_I(inode)->i_disk_time[0] = timespec64_to_timespec(inode->i_atime);
+	F2FS_I(inode)->i_disk_time[1] = timespec64_to_timespec(inode->i_ctime);
+	F2FS_I(inode)->i_disk_time[2] = timespec64_to_timespec(inode->i_mtime);
+	F2FS_I(inode)->i_disk_time[3] = F2FS_I(inode)->i_crtime;
 	f2fs_put_page(node_page, 1);
 
 	stat_inc_inline_xattr(inode);
@@ -701,7 +687,12 @@ void f2fs_update_inode(struct inode *inode, struct page *node_page)
 
 	/* deleted inode */
 	if (inode->i_nlink == 0)
-		clear_page_private_inline(node_page);
+		clear_inline_node(node_page);
+
+	F2FS_I(inode)->i_disk_time[0] = timespec64_to_timespec(inode->i_atime);
+	F2FS_I(inode)->i_disk_time[1] = timespec64_to_timespec(inode->i_ctime);
+	F2FS_I(inode)->i_disk_time[2] = timespec64_to_timespec(inode->i_mtime);
+	F2FS_I(inode)->i_disk_time[3] = F2FS_I(inode)->i_crtime;
 
 	init_idisk_time(inode);
 #ifdef CONFIG_F2FS_CHECK_FS
