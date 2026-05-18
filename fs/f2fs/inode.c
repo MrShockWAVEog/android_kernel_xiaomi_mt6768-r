@@ -685,7 +685,7 @@ void f2fs_update_inode(struct inode *inode, struct page *node_page)
 
 	/* deleted inode */
 	if (inode->i_nlink == 0)
-		clear_inline_node(node_page);
+		clear_page_private_inline(node_page);
 
 	init_idisk_time(inode);
 #ifdef CONFIG_F2FS_CHECK_FS
